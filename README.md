@@ -1,11 +1,11 @@
 # LightNTC
 
-# Pre-Processing ISCX - Raw Byte
-by: Azizi
+## Pre-Processing ISCX - Raw Byte
+by: @mebikarbonat
 
-Dataset Link: http://205.174.165.80/CICDataset/ISCX-VPN-NonVPN-2016/Dataset/
+Dataset Link: a <http://205.174.165.80/CICDataset/ISCX-VPN-NonVPN-2016/Dataset/>
 
-# Pre-training Process - Part 1
+## Pre-training Process - Part 1
 
 Change the following variable on the ISCX-VPN2016-pre-processing-v2.ipynb
 - Input Path: .PCAP/.PCAPNG File directory on the local machine
@@ -20,7 +20,7 @@ Note:
 - The number of packets left to be processed can be referred in the same cell once the first batch has been completely processed.
 
 
-Summary for ISCX-VPN2016-pre-processing-v2.ipynb
+### Summary for ISCX-VPN2016-pre-processing-v2.ipynb
 - Set .PCAP and PCAPNG file as input and save the file as .CSV
 - .PCAP will read as JSON from the FileCapture class when read from the file directory to speed up the process.
 - Create an empty df with 1480 columns representing MTU.
@@ -32,6 +32,6 @@ Summary for ISCX-VPN2016-pre-processing-v2.ipynb
 - The raw bytes will be converted from hex to decimal and appended to the df for the respective byte
 - Save the file as .CSV
 
-Summary for output .CSV file
+### Summary for output .CSV file
 - each of the features is included in column A and separated by a comma
 - Label is included as the last element in the cell

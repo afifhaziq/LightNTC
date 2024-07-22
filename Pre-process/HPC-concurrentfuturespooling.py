@@ -51,7 +51,7 @@ smtp_handler = logging.handlers.SMTPHandler(mailhost=('smtp.gmail.com', 587),
                 fromaddr="afifhaziq3078@gmail.com",
                 toaddrs="afifhaziq3078@gmail.com",
                 subject="Pre-Processing error message",
-                credentials=("afifhaziq3078@gmail.com", "yfxiwaukimuhgdvn"),
+                credentials=("afifhaziq3078@gmail.com", ""),
                 secure=())
 
 logger = logging.getLogger()

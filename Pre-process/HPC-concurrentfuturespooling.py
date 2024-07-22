@@ -14,17 +14,12 @@ def padding(byteValue) :
     byteValue = byteValue.ljust(2960, '0')
     return byteValue
 
-def truncate(byteValue) :
-    byteValue = byteValue[0:2960]
-    return byteValue
 
 def processPacket(byteValue) :
 
     # Process to truncate or padding
     byteLen = len(byteValue)
-    if byteLen > 2960 :
-        byteValue = truncate(byteValue)
-    else:
+    if byteLen < 2960 :
         byteValue = padding(byteValue)
         
     byteList = []
@@ -104,8 +99,7 @@ def pcaploop(cdetails):
                     byteValue = c[count].ip_raw.value + c[count].tcp_raw.value + c[count].tls_raw.value
                 except:
                     byteValue = c[count].ip_raw.value + c[count].tcp_raw.value + c[count].tls_raw.value[0]
-                df.loc[countIndex] = processPacket(byteValue)
-                countIndex += 1
+                
 
             elif 'HTTP' in c[count] :
                 pcapstats["counthttp"]+=1
@@ -113,8 +107,7 @@ def pcaploop(cdetails):
                     byteValue = c[count].ip_raw.value + c[count].tcp_raw.value + c[count].http_raw.value + c[count].data_raw.value
                 except :
                     byteValue = c[count].ip_raw.value + c[count].tcp_raw.value + c[count].http_raw.value
-                df.loc[countIndex] = processPacket(byteValue)
-                countIndex += 1
+                
 
             elif 'MDNS' in c[count] :
                 pcapstats["countmdns"]+=1
@@ -122,32 +115,27 @@ def pcaploop(cdetails):
                     byteValue = c[count].ipv6_raw.value + c[count].udp_raw.value + c[count].mdns_raw.value
                 except :
                     byteValue = c[count].ip_raw.value + c[count].udp_raw.value + c[count].mdns_raw.value
-                df.loc[countIndex] = processPacket(byteValue)
-                countIndex += 1
+                
 
             elif 'DNS' in c[count] and 'UDP' in c[count] :
                 pcapstats["countdns"]+=1
                 byteValue = c[count].ip_raw.value + c[count].udp_raw.value + c[count].dns_raw.value
-                df.loc[countIndex] = processPacket(byteValue)
-                countIndex += 1
+                
 
             elif 'DTLS' in c[count] :
                 pcapstats["countdtls"]+=1
                 byteValue = c[count].ip_raw.value + c[count].udp_raw.value + c[count].dtls_raw.value
-                df.loc[countIndex] = processPacket(byteValue)
-                countIndex += 1
+                
 
             elif 'GQUIC' in c[count] :
                 pcapstats["countgquic"]+=1
                 byteValue = c[count].ip_raw.value + c[count].udp_raw.value + c[count].gquic_raw.value
-                df.loc[countIndex] = processPacket(byteValue)
-                countIndex += 1
+                
 
             elif 'RTCP' in c[count] :
                 pcapstats["countrtcp"]+=1
                 byteValue = c[count].ip_raw.value + c[count].udp_raw.value + c[count].rtcp_raw.value
-                df.loc[countIndex] = processPacket(byteValue)
-                countIndex += 1
+                
 
             elif 'STUN' in c[count] :
                 pcapstats["countstun"]+=1
@@ -158,8 +146,7 @@ def pcaploop(cdetails):
                         byteValue = c[count].ip_raw.value + c[count].tcp_raw.value + c[count].stun_raw.value
                     except :
                         byteValue = c[count].ip_raw.value + c[count].stun_raw.value
-                df.loc[countIndex] = processPacket(byteValue)
-                countIndex += 1
+                
 
             elif 'TCP' in c[count] :
                 #print('TCP')
@@ -174,8 +161,7 @@ def pcaploop(cdetails):
                 else :
                     pcapstats["counttcp"]+=1
                     byteValue = c[count].ip_raw.value + c[count].tcp_raw.value
-                df.loc[countIndex] = processPacket(byteValue)
-                countIndex += 1
+                
 
             elif 'UDP' in c[count] and 'DATA' in c[count] :
                 pcapstats["countudp"]+=1
@@ -184,9 +170,7 @@ def pcaploop(cdetails):
                 except : 
                     byteValue = c[count].ip_raw.value + c[count].udp_raw.value + c[count].data_raw.value
 
-                df.loc[countIndex] = processPacket(byteValue)
-                countIndex += 1
-
+ 
             elif 'RTCP' in c[count] :
                 pcapstats["countrtcp"]+=1
                 try:
@@ -194,13 +178,17 @@ def pcaploop(cdetails):
                 except : 
                     byteValue = c[count].ip_raw.value + c[count].udp_raw.value
 
-                df.loc[countIndex] = processPacket(byteValue)
-                countIndex += 1
 
             else :
                 print(c[count].highest_layer)  
+                count +=1
+                continue
+
             count += 1
-            
+            df.loc[countIndex] = processPacket(byteValue)
+            countIndex += 1
+
+        # Assign label when the loop is completed 
         df['label'] = label
 
         print('Done')
@@ -216,7 +204,7 @@ def pcaploop(cdetails):
         logging.error("Exception occurred", exc_info=True)
 
         # Send email if error is detected
-        logger.exception(f"Error occured on {c1details['filename']} at Packet {count+1}")
+        logger.exception(f"Error occured on {cdetails['filename']} at Packet {count+1}")
         print("Error")
 
 
@@ -227,29 +215,29 @@ import time
 inputPath = "/home/user/afifhaziq/HPC-ISCX/"
 outputPath = "/home/user/afifhaziq/ISCX-Done/"
 
-c1details = {"filename": "voipbuster_4b",
-             "fileExtension" : ".pcap",
-             "label" : "voipbuster"}
-c1details["input"] = inputPath + c1details["filename"] + c1details["fileExtension"]
-c1details["output"] = outputPath + c1details["filename"] + c1details["fileExtension"] + '.csv'
+# Change this for each file
+# Utilize it to the max compute capacity
+pcaplist = [["voipbuster_4b", ".pcap", "voipbuster"],
+            ["voipbuster_4a", ".pcap", "voipbuster"],
+            ["skype_video2a", ".pcap", "skypevideo"],
+            ["skype_video2b", ".pcapng", "skypevideo"],
+            ["skype_audio4", ".pcapng", "skypeaudio"],
+            ["skype_audio3", ".pcapng", "skypeaudio"],
+            ["facebook_audio3", ".pcapng", "facebookaudio"],
+            ["facebook_audio3", ".pcapng", "facebookaudio"]]
 
-c2details = {"filename": "voipbuster_4a",
-             "fileExtension" : ".pcap",
-             "label" : "voipbuster"}
-c2details["input"] = inputPath + c2details["filename"] + c2details["fileExtension"]
-c2details["output"] = outputPath + c2details["filename"] + c2details["fileExtension"] + '.csv'
+cdetails = []
 
-c3details = {"filename": "skype_video2a",
-             "fileExtension" : ".pcap",
-             "label" : "skypevideo"}
-c3details["input"] = inputPath + c3details["filename"] + c3details["fileExtension"]
-c3details["output"] = outputPath + c3details["filename"] + c3details["fileExtension"] + '.csv'
+for i in pcaplist:
+    detail = {
+        "filename": i[0],
+        "fileExtension": i[1],
+        "label": i[2],
+        "input": inputPath + i[0] + i[1],
+        "output": outputPath + i[0] + i[1] + '.csv'
+    }
+    cdetails.append(detail)
 
-c4details = {"filename": "skype_video2b",
-             "fileExtension" : ".pcapng",
-             "label" : "skypevideo"}
-c4details["input"] = inputPath + c4details["filename"] + c4details["fileExtension"]
-c4details["output"] = outputPath + c4details["filename"] + c4details["fileExtension"] + '.csv'
 
 
 if __name__ == '__main__': 
@@ -259,16 +247,14 @@ if __name__ == '__main__':
     with concurrent.futures.ProcessPoolExecutor() as executor:
         
         # Map the pcaploop function over the list of dictionaries
-        executor.map(pcaploop, [c1details, c2details, c3details, c4details])
+        executor.map(pcaploop, cdetails)
 
-
-    
     end = time.perf_counter()
     print(f"Time taken: {end - start} seconds")
     
+    
     # printing df details
-    print(c1details["output"])
-    print(c2details["output"])
-    print(c3details["output"])
-    print(c4details["output"])
+    for i in cdetails:
+        print(i["output"])
+        
 

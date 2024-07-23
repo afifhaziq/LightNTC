@@ -25,7 +25,7 @@ def processPacket(byteValue) :
     byteList = []
 
     #convert the packet from hexadecimal to decimal format
-    for i in range(0, len(byteValue), 2):
+    for i in range(0, 2960, 2):
         temp = byteValue[i:i+2]
         base16INT = int(temp, 16)
         byteList.append(base16INT)
@@ -69,6 +69,7 @@ pcapstats = {"total": 0,
 
 count = 0
 countIndex = 0
+checkstring =""
 def pcaploop(cdetails):
 
     processid = os.getpid()
@@ -82,7 +83,7 @@ def pcaploop(cdetails):
 
     countDf = 0
     df = pd.DataFrame()
-    while countDf <= 1479 :
+    while countDf < 1480 :
         index = 'B' + str(countDf)
         df[index] = np.nan
         countDf += 1
@@ -90,97 +91,91 @@ def pcaploop(cdetails):
     global count 
     global countIndex
     try:
-        for x in c :
+        for packet in c :
             # print progress with PID
             print(f'{count} - PID: {format(processid)} - {cdetails["filename"]}')
-            if 'TLS' in c[count] :
+            checkstring = str(packet.layers)
+
+            if 'TLS' in packet :
                 pcapstats["counttls"]+=1
                 try:
-                    byteValue = c[count].ip_raw.value + c[count].tcp_raw.value + c[count].tls_raw.value
+                    byteValue = packet.ip_raw.value + packet.tcp_raw.value + packet.tls_raw.value
                 except:
-                    byteValue = c[count].ip_raw.value + c[count].tcp_raw.value + c[count].tls_raw.value[0]
+                    byteValue = packet.ip_raw.value + packet.tcp_raw.value + packet.tls_raw.value[0]
                 
 
-            elif 'HTTP' in c[count] :
+            elif 'HTTP' in packet :
                 pcapstats["counthttp"]+=1
                 try : 
-                    byteValue = c[count].ip_raw.value + c[count].tcp_raw.value + c[count].http_raw.value + c[count].data_raw.value
+                    byteValue = packet.ip_raw.value + packet.tcp_raw.value + packet.http_raw.value + packet.data_raw.value
                 except :
-                    byteValue = c[count].ip_raw.value + c[count].tcp_raw.value + c[count].http_raw.value
+                    byteValue = packet.ip_raw.value + packet.tcp_raw.value + packet.http_raw.value
                 
 
-            elif 'MDNS' in c[count] :
+            elif 'MDNS' in packet :
                 pcapstats["countmdns"]+=1
                 try :
-                    byteValue = c[count].ipv6_raw.value + c[count].udp_raw.value + c[count].mdns_raw.value
+                    byteValue = packet.ipv6_raw.value + packet.udp_raw.value + packet.mdns_raw.value
                 except :
-                    byteValue = c[count].ip_raw.value + c[count].udp_raw.value + c[count].mdns_raw.value
+                    byteValue = packet.ip_raw.value + packet.udp_raw.value + packet.mdns_raw.value
                 
 
-            elif 'DNS' in c[count] and 'UDP' in c[count] :
+            elif 'DNS' in packet and 'UDP' in packet :
                 pcapstats["countdns"]+=1
-                byteValue = c[count].ip_raw.value + c[count].udp_raw.value + c[count].dns_raw.value
+                byteValue = packet.ip_raw.value + packet.udp_raw.value + packet.dns_raw.value
                 
 
-            elif 'DTLS' in c[count] :
+            elif 'DTLS' in packet :
                 pcapstats["countdtls"]+=1
-                byteValue = c[count].ip_raw.value + c[count].udp_raw.value + c[count].dtls_raw.value
+                byteValue = packet.ip_raw.value + packet.udp_raw.value + packet.dtls_raw.value
                 
 
-            elif 'GQUIC' in c[count] :
+            elif 'GQUIC' in packet :
                 pcapstats["countgquic"]+=1
-                byteValue = c[count].ip_raw.value + c[count].udp_raw.value + c[count].gquic_raw.value
+                byteValue = packet.ip_raw.value + packet.udp_raw.value + packet.gquic_raw.value
                 
-
-            elif 'RTCP' in c[count] :
+            
+            elif 'RTCP' in packet or 'RTCP' in checkstring :
                 pcapstats["countrtcp"]+=1
-                byteValue = c[count].ip_raw.value + c[count].udp_raw.value + c[count].rtcp_raw.value
-                
+                try:
+                    byteValue = packet.ip_raw.value + packet.udp_raw.value + packet.rtcp_raw.value
+                except : 
+                    byteValue = packet.ip_raw.value + packet.udp_raw.value
 
-            elif 'STUN' in c[count] :
+            elif 'STUN' in packet :
                 pcapstats["countstun"]+=1
                 try :
-                    c[count].ip_raw.value + c[count].udp_raw.value + c[count].stun_raw.value
+                    packet.ip_raw.value + packet.udp_raw.value + packet.stun_raw.value
                 except :
                     try :
-                        byteValue = c[count].ip_raw.value + c[count].tcp_raw.value + c[count].stun_raw.value
+                        byteValue = packet.ip_raw.value + packet.tcp_raw.value + packet.stun_raw.value
                     except :
-                        byteValue = c[count].ip_raw.value + c[count].stun_raw.value
+                        byteValue = packet.ip_raw.value + packet.stun_raw.value
                 
 
-            elif 'TCP' in c[count] :
-                #print('TCP')
-                if 'DATA' in c[count] :
+            elif 'TCP' in packet :
+                if 'DATA' in packet :
                     pcapstats["counthttp"]+=1
                     try :
-                        byteValue = c[count].ip_raw.value + c[count].tcp_raw.value + c[count].http_raw.value + c[count].data_raw.value
+                        byteValue = packet.ip_raw.value + packet.tcp_raw.value + packet.http_raw.value + packet.data_raw.value
                         pcapstats["counthttp"]+=1
                     except :
-                        byteValue = c[count].ip_raw.value + c[count].tcp_raw.value + c[count].data_raw.value
+                        byteValue = packet.ip_raw.value + packet.tcp_raw.value + packet.data_raw.value
                         pcapstats["counttcp"]+=1
                 else :
                     pcapstats["counttcp"]+=1
-                    byteValue = c[count].ip_raw.value + c[count].tcp_raw.value
+                    byteValue = packet.ip_raw.value + packet.tcp_raw.value
                 
 
-            elif 'UDP' in c[count] and 'DATA' in c[count] :
+            elif 'UDP' in packet and 'DATA' in packet :
                 pcapstats["countudp"]+=1
                 try :
-                    byteValue = c[count].ipv6_raw.value + c[count].udp_raw.value + c[count].data_raw.value
+                    byteValue = packet.ipv6_raw.value + packet.udp_raw.value + packet.data_raw.value
                 except : 
-                    byteValue = c[count].ip_raw.value + c[count].udp_raw.value + c[count].data_raw.value
-
- 
-            elif 'RTCP' in c[count] :
-                pcapstats["countrtcp"]+=1
-                try:
-                    byteValue = c[count].ip_raw.value + c[count].udp_raw.value + c[count].rtcp_raw.value
-                except : 
-                    byteValue = c[count].ip_raw.value + c[count].udp_raw.value
-
+                    byteValue = packet.ip_raw.value + packet.udp_raw.value + packet.data_raw.value
 
             else :
-                print(c[count].highest_layer)  
+                print(packet.highest_layer)  
                 count +=1
                 continue
 
@@ -200,8 +195,6 @@ def pcaploop(cdetails):
         print(cdetails["output"])
 
     except Exception as e:
-        # Log the error and print the full traceback
-        logging.error("Exception occurred", exc_info=True)
 
         # Send email if error is detected
         logger.exception(f"Error occured on {cdetails['filename']} at Packet {count+1}")
@@ -211,32 +204,30 @@ def pcaploop(cdetails):
 # concurrent futures pooling
 import concurrent.futures
 import time
+import json
 
-inputPath = "/home/user/afifhaziq/HPC-ISCX/"
-outputPath = "/home/user/afifhaziq/ISCX-Done/"
+# inputPath = "/scr/user/afifhaziq/HPC-ISCX/"
+# outputPath = "/home/project/csnet/ISCX-Done/"
 
-# Change this for each file
-# Utilize it to the max compute capacity
-pcaplist = [["voipbuster_4b", ".pcap", "voipbuster"],
-            ["voipbuster_4a", ".pcap", "voipbuster"],
-            ["skype_video2a", ".pcap", "skypevideo"],
-            ["skype_video2b", ".pcapng", "skypevideo"],
-            ["skype_audio4", ".pcapng", "skypeaudio"],
-            ["skype_audio3", ".pcapng", "skypeaudio"],
-            ["facebook_audio3", ".pcapng", "facebookaudio"],
-            ["facebook_audio3", ".pcapng", "facebookaudio"]]
+inputPath = "C:\\Users\\afif\\Documents\\Master\\Code\\Dataset\\Done-03\\"
+outputPath = "C:\\Users\\afif\\Documents\\Master\\Code\\Dataset\\test\\"
 
-cdetails = []
+def load_pcap_list(filename):
+    with open(filename, 'r') as file:
+        pcaplist = json.load(file)
+        cdetails = []
 
-for i in pcaplist:
-    detail = {
-        "filename": i[0],
-        "fileExtension": i[1],
-        "label": i[2],
-        "input": inputPath + i[0] + i[1],
-        "output": outputPath + i[0] + i[1] + '.csv'
-    }
-    cdetails.append(detail)
+        # Create a list of PCAP dictionary based on the pcaplist
+        for i in pcaplist:
+            detail = {
+                "filename": i[0],
+                "fileExtension": i[1],
+                "label": i[2],
+                "input": inputPath + i[0] + i[1],
+                "output": outputPath + i[0] + i[1] + '.csv'
+            }
+            cdetails.append(detail)
+    return cdetails
 
 
 
@@ -244,6 +235,7 @@ if __name__ == '__main__':
     
     start = time.perf_counter()
     
+    cdetails = load_pcap_list('pcaplist.json')
     with concurrent.futures.ProcessPoolExecutor() as executor:
         
         # Map the pcaploop function over the list of dictionaries
@@ -251,7 +243,6 @@ if __name__ == '__main__':
 
     end = time.perf_counter()
     print(f"Time taken: {end - start} seconds")
-    
     
     # printing df details
     for i in cdetails:
